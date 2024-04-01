@@ -14,10 +14,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 #include <inttypes.h>
-
-#define UINT8_MAX 0xFF
-typedef uint16_t uint8_t;   // TMS320C28x doesn't support byte types
-typedef int16_t int8_t;   // TMS320C28x doesn't support byte types
+#include <stdatomic.h>
 
 #ifdef __linux__
    #include <endian.h>
@@ -35,7 +32,7 @@ typedef int16_t int8_t;   // TMS320C28x doesn't support byte types
 
 #define CC_PACKED_BEGIN
 #define CC_PACKED_END
-#define CC_PACKED       // compiler doesnt support struct packing
+#define CC_PACKED       __attribute__((packed))
 #define CC_ALIGNED(n)   __attribute__((aligned (n)))
 
 #ifdef __rtk__
@@ -51,12 +48,12 @@ typedef int16_t int8_t;   // TMS320C28x doesn't support byte types
 #define CC_SWAP32(x) __builtin_bswap32 (x)
 #define CC_SWAP16(x) __builtin_bswap16 (x)
 
-#define CC_ATOMIC_SET(var,val)   var = val
-#define CC_ATOMIC_GET(var)       var
-#define CC_ATOMIC_ADD(var,val)   __add(&var,val)
-#define CC_ATOMIC_SUB(var,val)   __sub(&var,val)
-#define CC_ATOMIC_AND(var,val)   __and(&var,val)
-#define CC_ATOMIC_OR(var,val)    __or(&var,val)
+#define CC_ATOMIC_SET(var,val)   atomic_store_explicit(&var, val, __ATOMIC_SEQ_CST)
+#define CC_ATOMIC_GET(var)       atomic_load_explicit(&var, __ATOMIC_SEQ_CST)
+#define CC_ATOMIC_ADD(var,val)   atomic_fetch_add_explicit(&var, val, __ATOMIC_SEQ_CST)
+#define CC_ATOMIC_SUB(var,val)   atomic_fetch_sub_explicit(&var, val, __ATOMIC_SEQ_CST)
+#define CC_ATOMIC_AND(var,val)   atomic_fetch_and_explicit(&var, val, __ATOMIC_SEQ_CST)
+#define CC_ATOMIC_OR(var,val)    atomic_fetch_or_explicit(&var, val, __ATOMIC_SEQ_CST)
 
 #if BYTE_ORDER == BIG_ENDIAN
 #define htoes(x) CC_SWAP16 ((uint16_t)(x))
